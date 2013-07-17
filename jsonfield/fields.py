@@ -64,8 +64,12 @@ class JSONFieldBase(six.with_metaclass(SubfieldBase, base=models.Field)):
         SubfieldBase meteaclass has been modified to call this method instead of
         to_python so that we can check the obj state and determine if it needs to be
         deserialized"""
+        try:
+            primary_key = obj.pk
+        except AttributeError:
+            return value
 
-        if obj._state.adding and obj.pk is not None:
+        if obj._state.adding and primary_key is not None:
             if isinstance(value, six.string_types):
                 try:
                     return json.loads(value, **self.load_kwargs)
