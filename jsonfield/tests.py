@@ -237,3 +237,10 @@ class OrderedDictSerializationTest(TestCase):
         self.assertEqual(list(mod.json.keys()), self.expected_key_order)
         mod_from_db = OrderedJsonModel.objects.get(id=mod.id)
         self.assertEqual(list(mod_from_db.json.keys()), self.expected_key_order)
+
+
+class JsonModelSubclass(JsonModel):
+    pass
+
+class JsonModelSubclassTest(JSONFieldTest):
+    json_model = JsonModelSubclass
