@@ -47,7 +47,7 @@ class JSONCharFormField(JSONFormFieldBase, fields.CharField):
     pass
 
 
-class JSONFieldBase(six.with_metaclass(SubfieldBase, base=models.Field)):
+class JSONFieldBase(six.with_metaclass(SubfieldBase, models.Field)):
 
     def __init__(self, *args, **kwargs):
         self.dump_kwargs = kwargs.pop('dump_kwargs', {
@@ -60,21 +60,21 @@ class JSONFieldBase(six.with_metaclass(SubfieldBase, base=models.Field)):
 
     def pre_init(self, value, obj):
         """Convert a string value to JSON only if it needs to be deserialized.
-        
+
         SubfieldBase meteaclass has been modified to call this method instead of
         to_python so that we can check the obj state and determine if it needs to be
         deserialized"""
-        try:
-            primary_key = obj.pk
-        except AttributeError:
-            return value
 
-        if obj._state.adding and primary_key is not None:
-            if isinstance(value, six.string_types):
-                try:
-                    return json.loads(value, **self.load_kwargs)
-                except ValueError:
-                    raise ValidationError(_("Enter valid JSON"))
+        if obj._state.adding:
+            # Make sure the primary key actually exists on the object before
+            # checking if it's empty. This is a special case for South datamigrations
+            # see: https://github.com/bradjasper/django-jsonfield/issues/52
+            if not hasattr(obj, "pk") or obj.pk is not None:
+                if isinstance(value, six.string_types):
+                    try:
+                        return json.loads(value, **self.load_kwargs)
+                    except ValueError:
+                        raise ValidationError(_("Enter valid JSON"))
 
         return value
 
